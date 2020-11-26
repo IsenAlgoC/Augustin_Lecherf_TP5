@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include "tab2.h"
 
-#define TAILLEINITIALE 10
+#define TAILLEINITIALE 100
 
 TABLEAU newArray() {
 	TABLEAU tab;
@@ -10,17 +10,17 @@ TABLEAU newArray() {
 	tab.eltsCount = 0;
 	tab.elt = (int*)malloc(TAILLEINITIALE * sizeof(int));
 
-	if (tab.elt == NULL) {           //on vérifie que la mémoire s'est bien allouée
+	if (tab.elt == NULL) {                 // on vérifie que la mémoire s'est bien allouée
 		return tab;
 	}
-	for (int i = 0; i < tab.size; i++) {   //on initialise à 0 le tableau
+	for (int i = 0; i < tab.size; i++) {   // on initialise à 0 le tableau
 		*(tab.elt + i) = 0;
 	}
 		return tab;
 }
 
 int incrementArraySize(TABLEAU* tab, int incrementValue) {
-	if ((*tab).elt == NULL || incrementValue <= 0) {         // test de validité
+	if ((*tab).elt == NULL || ((*tab).size+incrementValue) <=0 ) {         // test de validité
 		return -1;
 	}
 
@@ -28,7 +28,7 @@ int incrementArraySize(TABLEAU* tab, int incrementValue) {
 	(*tab).elt = (int*)realloc((*tab).elt, ((*tab).size + incrementValue) * sizeof(int));       // on alloue la nouvelle mémoire
 
 	if ((*tab).elt == NULL) {                                                                   // on vérifie que la mémoire est bien allouée		
-		(*tab).elt = save;
+		(*tab).elt = save;                                                                      // si ça n'est pas le cas, on annule la réallocation
 		return -1;
 	}
 
@@ -52,7 +52,7 @@ int setElement(TABLEAU* tab, int pos, int element) {
 	
 	else {
 		
-		if (incrementArraySize(tab, (pos - (*tab).size)) == -1) {  // Dans la cas où on dépasse la mémoire allouée
+		if (incrementArraySize(tab, (pos - (*tab).size)) == -1) {    // Dans la cas où on dépasse la mémoire allouée
 			return 0;
 		}
 		(*tab).elt[pos - 1] = element;                               // on écrit l'élement après avoir incrémentée la mémoire nécessaire
@@ -75,8 +75,39 @@ int displayElements(TABLEAU* tab, int startPos, int endPos) {
 		return 0;
 	}
 	for (int i = startPos - 1; i < endPos; i++) {                      // sinon on affiche tout entre start et end
-		printf("pos %d : %d\n",startPos +i ,(*tab).elt[i]);
+		printf("pos %d : %d\n",i+1 ,(*tab).elt[i]);
 	}
+	printf("\n");
 	return 0;
 }
 
+int deleteElements(TABLEAU* tab, int startPos, int endPos) {
+	int temp;                                       // variable pour échanger start et end
+
+	if (((*tab).elt == NULL) || (startPos < 1) || (startPos > (*tab).size) || (endPos < 1) || (endPos > (*tab).size)) {    // test de validité
+		return -1;   
+	}
+	if (startPos > endPos) {                        // échange si start > end
+		temp = startPos;
+		startPos = endPos;
+		endPos = temp;
+	}
+	if (startPos == endPos) {                       // on supprime un seul élément, et à partir de celui-ci on décale tout vers la gauche
+		for (int i = startPos - 1; i < (*tab).size - 1; i++) {
+			(*tab).elt[i] = (*tab).elt[i + 1];
+		}
+		if (incrementArraySize(tab, -1) == -1) {    // on enlève 1 case mémoire
+			return -1;
+		}	                           
+		return (*tab).size;
+	}
+	for (int i = startPos - 1; i < (*tab).size - (endPos - startPos + 1); i++) {            // cas où on supprime plusieurs éléments
+		(*tab).elt[i] = (*tab).elt[i + endPos - startPos + 1];        // à partir de startPos, on décale tout de (end-start+1) vers la gauche
+	}
+	if (incrementArraySize(tab, -(endPos - startPos + 1)) == -1) {    // on enlève (end-start+1) cases mémoire
+		return -1;
+	}
+
+	return (*tab).size;
+	
+}
